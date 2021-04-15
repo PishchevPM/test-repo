@@ -14,7 +14,7 @@ try:
     in_chan = 4
     V_chan = 17
     GPIO.setmode (GPIO.BCM)
-    GPIO.setup (chan_list, GPIO.OUT)
+    GPIO.setup (out_list, GPIO.OUT)
     GPIO.setup (V_chan, GPIO.OUT)
     GPIO.setup (in_chan, GPIO.IN)
 except:
@@ -31,31 +31,28 @@ def num2dac (value):
     x = decToBinList (value)
     GPIO.output (out_list, tuple (x))
  
-def healthy_search ():
+def V_search ():
     dg = 0
     i = 128
-    while i != 0:
-        an = maxV * (dg + i) / 255
-        num2dac(dg)
+    while i >= 1:
+        num2dac(int((dg + i) * 50 / 255))
+        time.sleep (0.00001)
         if GPIO.input (in_chan) == 1:
             dg += i
-        i /= 2
+        i = int(i / 2)
+    an = maxV * dg / 255
+    print(outstr.format(digital = dg, analog = an))
     return dg
 
-T_list = []
-V_list = []
 try:
     GPIO.output (V_chan, 1)
     while True:
-        curtime = time.time()
-        V_list.append(healthy_search())
-        T_list.append(time.time() - curtime)
-        time.sleep (0.1)
+        V_search()
 except:
     print ("Неизвестная ошибка, выходим из программы.")
 finally:
-    plt.plot(T_list, V_list, 'r-')
-    plt.show()
-    GPIO.output (chan_list, 0)
+    GPIO.output (out_list, 0)
     GPIO.output (V_chan, 0)
-    GPIO.cleanup (chan_list)
+    GPIO.cleanup (out_list)
+    GPIO.cleanup (V_chan)
+    GPIO.cleanup (in_chan)

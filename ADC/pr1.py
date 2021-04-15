@@ -13,7 +13,7 @@ try:
     in_chan = 4
     V_chan = 17
     GPIO.setmode (GPIO.BCM)
-    GPIO.setup (chan_list, GPIO.OUT)
+    GPIO.setup (out_list, GPIO.OUT)
     GPIO.setup (V_chan, GPIO.OUT)
     GPIO.setup (in_chan, GPIO.IN)
 except:
@@ -43,12 +43,14 @@ try:
         else:
             if value == -1:
                 break
-            an = maxV * value / 255
+            an = maxV * value / 255.0
             print (outstr.format(digital = value, analog = an))
-            num2dac(value)
+            num2dac(int(value * 50 / 255))
 except:
     print ("Неизвестная ошибка, выходим из программы.")
 finally:
-    GPIO.output (chan_list, 0)
+    GPIO.output (out_list, 0)
     GPIO.output (V_chan, 0)
-    GPIO.cleanup (chan_list)
+    GPIO.cleanup (out_list)
+    GPIO.cleanup (V_chan)
+    GPIO.cleanup (in_chan)

@@ -13,7 +13,7 @@ try:
     in_chan = 4
     V_chan = 17
     GPIO.setmode (GPIO.BCM)
-    GPIO.setup (chan_list, GPIO.OUT)
+    GPIO.setup (out_list, GPIO.OUT)
     GPIO.setup (V_chan, GPIO.OUT)
     GPIO.setup (in_chan, GPIO.IN)
 except:
@@ -30,20 +30,23 @@ def num2dac (value):
     x = decToBinList (value)
     GPIO.output (out_list, tuple (x))
  
-def smoker_search ():
+def V_search ():
     for dg in range (0, 256, 1):
         an = maxV * dg / 255
-        num2dac(dg)
-        if GPIO.input (in_chan) == 1:
+        num2dac(int(dg * 50 / 255))
+        time.sleep (0.00001)
+        if GPIO.input (in_chan) == 0:
             print(outstr.format(digital = dg, analog = an))
             return dg
 try:
     GPIO.output (V_chan, 1)
     while True:
-        smoker_search()
+        V_search()
 except:
     print ("Неизвестная ошибка, выходим из программы.")
 finally:
-    GPIO.output (chan_list, 0)
+    GPIO.output (out_list, 0)
     GPIO.output (V_chan, 0)
-    GPIO.cleanup (chan_list)
+    GPIO.cleanup (out_list)
+    GPIO.cleanup (V_chan)
+    GPIO.cleanup (in_chan)
