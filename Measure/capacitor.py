@@ -34,13 +34,13 @@ def num2pins (pins, value):
     GPIO.output (pins, tuple (x))
 
 def adc():
-    dg = 0
+    dg = 255
     i = 128
     while i >= 1:
-        num2pins(dac_list, i)
-        time.sleep (0.0001)
-        if GPIO.input (cmp_chan) == 1:
-            dg += i
+        num2pins(dac_list, dg - i)
+        time.sleep (0.001)
+        if GPIO.input (cmp_chan) == 0:
+            dg -= i
         i = int(i / 2)
     return dg
 
@@ -48,26 +48,35 @@ measure = []
 timelist = []
 try:
     GPIO.output (V_chan, 1)
+    GPIO.output (dac_list, 0)
     dg = 0
     tm0 = time.time()
-    while dg <= 254:
+    while dg <= 248:
+        time.sleep (0.08)
+        print (dg)
         dg = adc ()
         timelist.append (time.time () - tm0)
         measure.append (dg)
-    while dg >= 1:
+    GPIO.output (V_chan, 0)
+    while dg >= 4:
+        time.sleep (0.08)
+        print (dg)
         dg = adc ()
         timelist.append (time.time () - tm0)
         measure.append (dg)
 
-    np.savetxt('setting.txt', [(time.time () - tm0) / len (timelist), maxV / 255], fmt='%d')
+    np.savetxt('setting.txt', [(time.time () - tm0) / len (timelist), maxV / 255], fmt='%f')
     np.savetxt('data.txt', measure, fmt='%d')
     plt.plot(timelist, measure)
     plt.title('Зависимость напряжение на обкладках конденсатора от времени')
     plt.xlabel('Время, с')
     plt.ylabel('Напряжение, В')
+    plt.show ()
 
+    while dg >= 1:
+        dg = adc ()
 except:
-    print ("lol")
+    print ("Неизвестная ошибка, выходим из программы.")
 finally:
     GPIO.output (dac_list, 0)
     GPIO.output (V_chan, 0)
